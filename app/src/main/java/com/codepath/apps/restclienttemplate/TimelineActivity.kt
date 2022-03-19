@@ -1,8 +1,12 @@
 package com.codepath.apps.restclienttemplate
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -17,6 +21,7 @@ class TimelineActivity : AppCompatActivity() {
     lateinit var adapter: TweetsAdapter
     val tweets = ArrayList<Tweet>()
     lateinit var swipeContainer: SwipeRefreshLayout
+    val COMPOSE_ACTIVITY: Int = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_timeline)
@@ -36,6 +41,21 @@ class TimelineActivity : AppCompatActivity() {
             android.R.color.holo_red_light);
         populateHomeTimeLine()
     }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main,menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId ==R.id.compose){
+            //Toast.makeText(this,"Ready to compose tweet!", Toast.LENGTH_LONG)
+            val intent = Intent(this,ComposeActivity::class.java)
+            startActivityForResult(intent, COMPOSE_ACTIVITY)
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     fun fetchTimelineAsync(page:Int){
         populateHomeTimeLine()
     }
@@ -65,5 +85,20 @@ class TimelineActivity : AppCompatActivity() {
             }
 
         })
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(resultCode == RESULT_OK && requestCode == COMPOSE_ACTIVITY){
+            Log.i("CUSTOMA","refresh triggered")
+            val tweet = data?.getParcelableExtra("tweet") as Tweet
+            Log.i("CUSTOMA","here is the body of the tweet:${tweet.body}")
+            adapter.tweets.add(0,tweet)
+            adapter.notifyItemInserted(0)
+            rvTweets.smoothScrollToPosition(0)
+            Log.i("CUSTOMA","element at 0:${tweets.get(0).body}")
+        }else {
+            Log.i("CUSTOMA","did not trip refresh")
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 }
